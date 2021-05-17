@@ -1,11 +1,4 @@
-import {
-  component,
-  ComponentOf,
-  createEffect,
-  createQuery,
-  Entity,
-  UNSAFE_internals,
-} from "@javelin/ecs"
+import { component, createEffect, createQuery, Entity } from "@javelin/ecs"
 import { createMessageProducer, MessageProducer } from "@javelin/net"
 import { Connection } from "@web-udp/client"
 import {
@@ -14,8 +7,8 @@ import {
   ConnectionType,
   Fighter,
   isConnectionMetadata,
-} from "../../common"
-import { Player } from "../../common/schema"
+  Player,
+} from "../../../common"
 import { MESSAGE_MAX_BYTE_LENGTH } from "../env"
 import { udp } from "../net"
 
@@ -87,7 +80,6 @@ export const useClients = createEffect(world => {
   udp.connections.subscribe(connection => {
     try {
       const { metadata } = connection
-      console.log(metadata)
       assert(
         isConnectionMetadata(metadata),
         "Failed to connect: invalid metadata",

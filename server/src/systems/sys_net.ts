@@ -1,8 +1,7 @@
 import { createQuery, useInterval, useMonitor } from "@javelin/ecs"
 import { encode } from "@javelin/net"
 import { ChangeSet, reset } from "@javelin/track"
-import { Fighter } from "../../common"
-import { Player, Transform } from "../../common/schema"
+import { Fighter, Player, Transform } from "../../../common"
 import { useClients } from "../effects"
 import { SEND_RATE } from "../env"
 

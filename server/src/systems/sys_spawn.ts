@@ -1,7 +1,6 @@
 import { createQuery, useMonitor, World } from "@javelin/ecs"
 import { Clock } from "@javelin/hrtime-loop"
-import { Fighter } from "../../common/prefabs"
-import { Player } from "../../common/schema"
+import { Fighter, Player } from "../../../common"
 
 const qryPlayers = createQuery(Player)
 
