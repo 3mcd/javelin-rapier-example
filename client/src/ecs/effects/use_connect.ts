@@ -1,6 +1,7 @@
 import { createEffect } from "@javelin/ecs"
 import { createMessageHandler } from "@javelin/net"
 import { Client } from "@web-udp/client"
+import { ConnectionMetadata, ConnectionType } from "../../../../common"
 
 export const useConnect = createEffect(
   world => {
@@ -12,12 +13,21 @@ export const useConnect = createEffect(
       url: `${window.location.hostname}:8000`,
     })
 
-    client.connect().then(c =>
-      c.messages.subscribe(message => {
-        state.bytes += message.byteLength
-        handler.push(message)
-      }),
-    )
+    client
+      .connect({
+        metadata: {
+          clientId:
+            new URLSearchParams(window.location.search).get("clientId") ??
+            "daisy",
+          type: ConnectionType.Reliable,
+        } as ConnectionMetadata,
+      })
+      .then(c =>
+        c.messages.subscribe(message => {
+          state.bytes += message.byteLength
+          handler.push(message)
+        }),
+      )
 
     return () => {
       handler.system()
