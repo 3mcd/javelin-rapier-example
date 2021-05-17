@@ -16,7 +16,7 @@ loop.start()
 server.listen(Env.PORT)
 
 console.log(`
-Javelin Bounce server started!
+Javelin Bounce server started!!
 ${Object.entries(Env)
   .map(([key, value]) => `${key}: ${value}`)
   .join("\n")}
