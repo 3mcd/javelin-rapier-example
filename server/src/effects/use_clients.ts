@@ -3,17 +3,15 @@ import { createMessageProducer, MessageProducer } from "@javelin/net"
 import { Connection } from "@web-udp/client"
 import {
   assert,
-  Box,
   ConnectionMetadata,
   ConnectionType,
   Fighter,
   isConnectionMetadata,
   Player,
-  Transform,
-  Velocity,
 } from "../../../common"
 import { MESSAGE_MAX_BYTE_LENGTH } from "../env"
 import { udp } from "../net"
+import { qryBoxesStatic } from "../queries"
 
 export type Client = {
   id: string
@@ -24,15 +22,14 @@ export type Client = {
   connectionU: Connection | null
 }
 
-const qryStatic = createQuery(Transform, Box).not(Velocity)
-
 export const useClients = createEffect(world => {
   const { spawn, destroy } = world
   const clients = new Map<string, Client>()
   const qryPlayers = createQuery(Player).bind(world)
   const initialize = (client: Client) => {
+    qryPlayers(client.producer.spawn)
     Fighter.query.bind(world)(client.producer.spawn)
-    qryStatic.bind(world)(client.producer.spawn)
+    qryBoxesStatic.bind(world)(client.producer.spawn)
     client.producer.model()
   }
   const findOrCreateClient = (

@@ -1,5 +1,5 @@
 import { component, createQuery, useRef, World } from "@javelin/ecs"
-import { Fighter } from "../../../../common"
+import { Fighter, Player } from "../../../../common"
 import { CANVAS_SCALE, useScene } from "../effects"
 import { Camera, Interpolate } from "../schema"
 import { Transform, Velocity, Box } from "../../../../common"
@@ -41,6 +41,10 @@ export const sysRender = ({ has, get, spawn }: World<WorldTickData>) => {
       context.save()
       context.translate(x, y)
       context.rotate(angle)
+      if (has(e, Player)) {
+        context.fillStyle = "#ffd8be"
+        context.fillRect(-hw, -hh, width, height)
+      }
       context.lineWidth = 0.1
       context.strokeStyle = "#ffd8be"
       context.strokeRect(-hw, -hh, width, height)

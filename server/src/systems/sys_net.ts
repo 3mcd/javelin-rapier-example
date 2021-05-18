@@ -1,39 +1,58 @@
 import { createQuery, useInterval, useMonitor } from "@javelin/ecs"
 import { encode } from "@javelin/net"
 import { ChangeSet, reset } from "@javelin/track"
-import { Box, Fighter, Player, Transform, Velocity } from "../../../common"
+import {
+  Box,
+  Fighter,
+  Health,
+  Player,
+  Transform,
+  Velocity,
+} from "../../../common"
 import { useClients } from "../effects"
 import { SEND_RATE } from "../env"
+import { qryBodiesWChanges, qryBoxesStatic, qryPlayers } from "../queries"
 
-const qryPlayers = createQuery(Player)
-const qryStatic = createQuery(Transform, Box).not(Velocity)
-const qryBodiesWChanges = createQuery(Transform, ChangeSet)
+// useMonitor resets for each new query. Should make it when signature changes...
+const needToLookIntoThis = Fighter.query.not(Player)
+const sigh = createQuery(Transform, Velocity, Box, Health, ChangeSet)
 
 export const sysNet = () => {
   const send = useInterval((1 / SEND_RATE) * 1000)
   const { clients } = useClients()
 
   useMonitor(
+    qryPlayers,
+    (e, [p]) => clients.forEach(client => client.producer.spawn(e, [p])),
+    e => clients.forEach(client => client.producer.destroy(e)),
+  )
+  // useMonitor(
+  //   needToLookIntoThis,
+  //   e => {
+  //     console.log(e)
+  //     clients.forEach(client => client.producer.spawn(e, Fighter.query.get(e)))
+  //   },
+  //   e => clients.forEach(client => client.producer.destroy(e)),
+  // )
+  useMonitor(
     Fighter.query,
     e =>
-      qryPlayers((_, [{ clientId }]) =>
-        clients.get(clientId)?.producer.spawn(e, Fighter.query.get(e)),
+      clients.forEach(client =>
+        client.producer.attach(e, Fighter.query.get(e)),
       ),
     e =>
-      qryPlayers((_, [{ clientId }]) =>
-        clients.get(clientId)?.producer.destroy(e),
+      clients.forEach(client =>
+        client.producer.detach(e, Fighter.query.get(e)),
       ),
   )
+
   useMonitor(
-    qryStatic,
+    qryBoxesStatic,
     e =>
-      qryPlayers((_, [{ clientId }]) =>
-        clients.get(clientId)?.producer.spawn(e, qryStatic.get(e)),
+      clients.forEach(client =>
+        client.producer.spawn(e, qryBoxesStatic.get(e)),
       ),
-    e =>
-      qryPlayers((_, [{ clientId }]) =>
-        clients.get(clientId)?.producer.destroy(e),
-      ),
+    e => clients.forEach(client => client.producer.destroy(e)),
   )
 
   if (send) {
