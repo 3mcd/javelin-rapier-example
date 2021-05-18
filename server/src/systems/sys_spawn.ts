@@ -1,9 +1,40 @@
-import { createQuery, useMonitor, World } from "@javelin/ecs"
+import {
+  createQuery,
+  useInterval,
+  useMonitor,
+  useRef,
+  World,
+} from "@javelin/ecs"
 import { Clock } from "@javelin/hrtime-loop"
 import { Fighter, Player } from "../../../common"
 
 const qryPlayers = createQuery(Player)
 
 export const sysSpawn = (world: World<Clock>) => {
-  useMonitor(qryPlayers, e => Fighter.attach(e, world))
+  const spawned = useRef(0)
+  const spawn = useInterval(100) && spawned.value < 100
+
+  useMonitor(qryPlayers, e => {
+    const width = Math.max(0.5, Math.random() * 2)
+    Fighter.attach(
+      e,
+      world,
+      (1 - Math.random() * 2) * 5,
+      20 + (1 - Math.random() * 2) * 5,
+      width,
+      width,
+    )
+  })
+
+  if (spawn) {
+    spawned.value++
+    const width = Math.max(0.5, Math.random() * 2)
+    Fighter.spawn(
+      world,
+      (1 - Math.random() * 2) * 5,
+      20 + (1 - Math.random() * 2) * 5,
+      width,
+      width,
+    )
+  }
 }

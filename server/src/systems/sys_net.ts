@@ -1,11 +1,12 @@
 import { createQuery, useInterval, useMonitor } from "@javelin/ecs"
 import { encode } from "@javelin/net"
 import { ChangeSet, reset } from "@javelin/track"
-import { Fighter, Player, Transform } from "../../../common"
+import { Box, Fighter, Player, Transform, Velocity } from "../../../common"
 import { useClients } from "../effects"
 import { SEND_RATE } from "../env"
 
 const qryPlayers = createQuery(Player)
+const qryStatic = createQuery(Transform, Box).not(Velocity)
 const qryBodiesWChanges = createQuery(Transform, ChangeSet)
 
 export const sysNet = () => {
@@ -23,6 +24,17 @@ export const sysNet = () => {
         clients.get(clientId)?.producer.destroy(e),
       ),
   )
+  useMonitor(
+    qryStatic,
+    e =>
+      qryPlayers((_, [{ clientId }]) =>
+        clients.get(clientId)?.producer.spawn(e, qryStatic.get(e)),
+      ),
+    e =>
+      qryPlayers((_, [{ clientId }]) =>
+        clients.get(clientId)?.producer.destroy(e),
+      ),
+  )
 
   if (send) {
     for (const [entities, [players]] of qryPlayers) {
@@ -34,7 +46,7 @@ export const sysNet = () => {
         }
         for (const [entities, [, changes]] of qryBodiesWChanges) {
           for (let i = 0; i < entities.length; i++) {
-            client.producerU.patch(entities[i], changes[i])
+            client.producerU.patch(entities[i], changes[i], 1)
           }
         }
         const message = client.producer.take()

@@ -1,38 +1,70 @@
-import { component, useRef, World } from "@javelin/ecs"
+import { component, createQuery, useRef, World } from "@javelin/ecs"
 import { Fighter } from "../../../../common"
-import { useScene } from "../effects"
-import { Camera } from "../schema"
+import { CANVAS_SCALE, useScene } from "../effects"
+import { Camera, Interpolate } from "../schema"
+import { Transform, Velocity, Box } from "../../../../common"
 import { WorldTickData } from "../types"
 
-export const sysRender = ({
-  state: {
-    currentTickData: { canvas },
-  },
-  spawn,
-}: World<WorldTickData>) => {
+const qryStatic = createQuery(Transform, Box).not(Velocity)
+
+export const sysRender = ({ has, get, spawn }: World<WorldTickData>) => {
   const init = useRef(false)
-  const scene = useScene(canvas)
-  if (!scene.ready) {
+  const scene = useScene()
+  const context = scene.canvas?.context
+
+  if (!(context && scene.ready)) {
     return
   }
+
   if (!init.value) {
     spawn(component(Camera))
     init.value = true
   }
-  scene.canvas.context?.clearRect(
-    0,
-    0,
-    scene.canvas.width,
-    -scene.canvas.height,
-  )
+
+  const hw = scene.canvas.width / CANVAS_SCALE / 2
+  const hh = -scene.canvas.height / CANVAS_SCALE / 2
+
+  context.translate(hw, hh)
+
   for (const [
     entities,
-    [transforms, velocities, shapes, healths],
+    [transforms, velocities, boxes, healths],
   ] of Fighter.query) {
     for (let i = 0; i < entities.length; i++) {
-      const { x, y } = transforms[i]
-      const { vertices } = shapes[i]
-      scene.canvas.context?.fillRect(x, y, 1, 1)
+      const e = entities[i]
+      const { angle, x, y } = has(e, Interpolate)
+        ? get(e, Interpolate)
+        : transforms[i]
+      const { width, height } = boxes[i]
+      const hw = width / 2
+      const hh = height / 2
+      context.save()
+      context.translate(x, y)
+      context.rotate(angle)
+      context.lineWidth = 0.1
+      context.strokeStyle = "#ffd8be"
+      context.strokeRect(-hw, -hh, width, height)
+      context.restore()
     }
   }
+  for (const [entities, [transforms, boxes]] of qryStatic) {
+    for (let i = 0; i < entities.length; i++) {
+      const e = entities[i]
+      const { angle, x, y } = has(e, Interpolate)
+        ? get(e, Interpolate)
+        : transforms[i]
+      const { width, height } = boxes[i]
+      const hw = width / 2
+      const hh = height / 2
+      context.save()
+      context.translate(x, y)
+      context.rotate(angle)
+      context.lineWidth = 0.1
+      context.strokeStyle = "#ffeedd"
+      context.strokeRect(-hw, -hh, width, height)
+      context.restore()
+    }
+  }
+
+  context.translate(-hw, -hh)
 }
