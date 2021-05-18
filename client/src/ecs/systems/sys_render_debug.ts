@@ -22,10 +22,11 @@ export const sysRenderDebug = () => {
   context.save()
   context.font = "16px SF Mono"
   context.fillStyle = "#9381ff"
+  context.textAlign = "right"
   context.scale(1 / CANVAS_SCALE, -1 / CANVAS_SCALE)
   context.fillText(
     `${Number((bandwidth.value / 1000).toFixed(2)).toLocaleString()} kb/s`,
-    18,
+    (scene.canvas?.width ?? 0) - 18,
     32,
   )
   context.restore()

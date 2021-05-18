@@ -1,21 +1,10 @@
-import { createQuery, useInterval, useMonitor } from "@javelin/ecs"
+import { useInterval, useMonitor } from "@javelin/ecs"
 import { encode } from "@javelin/net"
-import { ChangeSet, reset } from "@javelin/track"
-import {
-  Box,
-  Fighter,
-  Health,
-  Player,
-  Transform,
-  Velocity,
-} from "../../../common"
+import { reset } from "@javelin/track"
+import { Fighter } from "../../../common"
 import { useClients } from "../effects"
 import { SEND_RATE } from "../env"
 import { qryBodiesWChanges, qryBoxesStatic, qryPlayers } from "../queries"
-
-// useMonitor resets for each new query. Should make it when signature changes...
-const needToLookIntoThis = Fighter.query.not(Player)
-const sigh = createQuery(Transform, Velocity, Box, Health, ChangeSet)
 
 export const sysNet = () => {
   const send = useInterval((1 / SEND_RATE) * 1000)
@@ -23,17 +12,11 @@ export const sysNet = () => {
 
   useMonitor(
     qryPlayers,
-    (e, [p]) => clients.forEach(client => client.producer.spawn(e, [p])),
-    e => clients.forEach(client => client.producer.destroy(e)),
+    (e, results) =>
+      clients.forEach(client => client.producer.attach(e, results)),
+    (e, results) =>
+      clients.forEach(client => client.producer.detach(e, results)),
   )
-  // useMonitor(
-  //   needToLookIntoThis,
-  //   e => {
-  //     console.log(e)
-  //     clients.forEach(client => client.producer.spawn(e, Fighter.query.get(e)))
-  //   },
-  //   e => clients.forEach(client => client.producer.destroy(e)),
-  // )
   useMonitor(
     Fighter.query,
     e =>
@@ -45,14 +28,12 @@ export const sysNet = () => {
         client.producer.detach(e, Fighter.query.get(e)),
       ),
   )
-
   useMonitor(
     qryBoxesStatic,
-    e =>
-      clients.forEach(client =>
-        client.producer.spawn(e, qryBoxesStatic.get(e)),
-      ),
-    e => clients.forEach(client => client.producer.destroy(e)),
+    (e, results) =>
+      clients.forEach(client => client.producer.attach(e, results)),
+    (e, results) =>
+      clients.forEach(client => client.producer.detach(e, results)),
   )
 
   if (send) {
@@ -63,9 +44,14 @@ export const sysNet = () => {
         if (client === undefined) {
           continue
         }
-        for (const [entities, [, changes]] of qryBodiesWChanges) {
+        for (const [entities, [transforms, changes]] of qryBodiesWChanges) {
           for (let i = 0; i < entities.length; i++) {
-            client.producerU.patch(entities[i], changes[i], 1)
+            const { x, y } = transforms[i]
+            client.producerU.patch(
+              entities[i],
+              changes[i],
+              1 / Math.sqrt(x ** 2 + y ** 2),
+            )
           }
         }
         const message = client.producer.take()

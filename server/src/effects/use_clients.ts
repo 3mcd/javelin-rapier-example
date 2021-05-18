@@ -1,5 +1,12 @@
 import { component, createEffect, createQuery, Entity } from "@javelin/ecs"
-import { createMessageProducer, MessageProducer } from "@javelin/net"
+import {
+  attach,
+  createMessage,
+  createMessageProducer,
+  encode,
+  MessageProducer,
+  model,
+} from "@javelin/net"
 import { Connection } from "@web-udp/client"
 import {
   assert,
@@ -26,11 +33,15 @@ export const useClients = createEffect(world => {
   const { spawn, destroy } = world
   const clients = new Map<string, Client>()
   const qryPlayers = createQuery(Player).bind(world)
-  const initialize = (client: Client) => {
-    qryPlayers(client.producer.spawn)
-    Fighter.query.bind(world)(client.producer.spawn)
-    qryBoxesStatic.bind(world)(client.producer.spawn)
-    client.producer.model()
+  const sendInitialMessage = (client: Client) => {
+    const message = createMessage()
+    model(message)
+    qryPlayers((e, components) => attach(message, e, components))
+    Fighter.query.bind(world)((e, components) => attach(message, e, components))
+    qryBoxesStatic.bind(world)((e, components) =>
+      attach(message, e, components),
+    )
+    client.connection.send(encode(message))
   }
   const findOrCreateClient = (
     connection: Connection,
@@ -70,7 +81,7 @@ export const useClients = createEffect(world => {
         client.connection.close()
       }
       client.connection = connection
-      initialize(client)
+      sendInitialMessage(client)
     }
     if (type === ConnectionType.Unreliable) {
       if (client.connectionU) {

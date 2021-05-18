@@ -5,7 +5,7 @@ import { qryPlayers } from "../queries"
 
 export const sysSpawn = (world: World<Clock>) => {
   const spawned = useRef(0)
-  const spawn = useInterval(100) && spawned.value < 10
+  const spawn = useInterval(100) && spawned.value < 100
 
   useMonitor(qryPlayers, e => {
     const width = Math.max(0.5, Math.random() * 2)
