@@ -1,57 +1,46 @@
-import { useInterval, useMonitor } from "@javelin/ecs"
+import { Component, Entity, useInterval, useMonitor, World } from "@javelin/ecs"
+import { Clock } from "@javelin/hrtime-loop"
 import { encode } from "@javelin/net"
 import { reset } from "@javelin/track"
-import { Fighter } from "../../../common"
+import { Crate, Player, Transform } from "../../../common"
 import { useClients } from "../effects"
 import { SEND_RATE } from "../env"
 import { qryBodiesWChanges, qryBoxesStatic, qryPlayers } from "../queries"
 
-export const sysNet = () => {
+export const sysNet = ({ tryGet }: World<Clock>) => {
   const send = useInterval((1 / SEND_RATE) * 1000)
   const { clients } = useClients()
 
-  useMonitor(
-    qryPlayers,
-    (e, results) =>
-      clients.forEach(client => client.producer.attach(e, results)),
-    (e, results) =>
-      clients.forEach(client => client.producer.detach(e, results)),
-  )
-  useMonitor(
-    Fighter.query,
-    e =>
-      clients.forEach(client =>
-        client.producer.attach(e, Fighter.query.get(e)),
-      ),
-    e =>
-      clients.forEach(client =>
-        client.producer.detach(e, Fighter.query.get(e)),
-      ),
-  )
-  useMonitor(
-    qryBoxesStatic,
-    (e, results) =>
-      clients.forEach(client => client.producer.attach(e, results)),
-    (e, results) =>
-      clients.forEach(client => client.producer.detach(e, results)),
-  )
+  const syncMonitorAttach = (e: Entity, components: Component[]) =>
+    clients.forEach(client => client.producer.attach(e, components))
+  const syncMonitorDetach = (e: Entity, components: Component[]) =>
+    clients.forEach(client => client.producer.detach(e, components))
 
+  useMonitor(qryPlayers, syncMonitorAttach, syncMonitorDetach)
+  useMonitor(qryBoxesStatic, syncMonitorAttach, syncMonitorDetach)
+  useMonitor(Crate.query, syncMonitorAttach, syncMonitorDetach)
   if (send) {
     for (const [entities, [players]] of qryPlayers) {
       for (let i = 0; i < entities.length; i++) {
         const { clientId } = players[i]
         const client = clients.get(clientId)
+        const playerTransform = tryGet(entities[i], Transform)
         if (client === undefined) {
           continue
         }
         for (const [entities, [transforms, changes]] of qryBodiesWChanges) {
           for (let i = 0; i < entities.length; i++) {
             const { x, y } = transforms[i]
-            client.producerU.patch(
-              entities[i],
-              changes[i],
-              1 / Math.sqrt(x ** 2 + y ** 2),
-            )
+            let distance: number
+            if (playerTransform) {
+              distance = Math.hypot(
+                playerTransform.x - x,
+                playerTransform.y - y,
+              )
+            } else {
+              distance = Math.hypot(x, y)
+            }
+            client.producerU.patch(entities[i], changes[i], 1 / distance)
           }
         }
         const message = client.producer.take()

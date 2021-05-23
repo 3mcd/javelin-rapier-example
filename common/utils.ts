@@ -16,3 +16,15 @@ export function assert(
     throw new Error(message)
   }
 }
+
+const registerConnection = (
+  connection: Connection,
+  metadata: ConnectionMetadata,
+) => {
+  console.log(
+    `${metadata.clientId} ${
+      metadata.type === ConnectionType.Reliable ? "reliable" : "unreliable"
+    }connected`,
+  )
+  // TODO: handle incoming connection
+}

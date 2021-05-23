@@ -1,5 +1,5 @@
 import { component, createQuery, useRef, World } from "@javelin/ecs"
-import { Fighter, Player } from "../../../../common"
+import { Crate, Player } from "../../../../common"
 import { CANVAS_SCALE, useScene } from "../effects"
 import { Camera, Interpolate } from "../schema"
 import { Transform, Velocity, Box } from "../../../../common"
@@ -29,7 +29,7 @@ export const sysRender = ({ has, get, spawn }: World<WorldTickData>) => {
   for (const [
     entities,
     [transforms, velocities, boxes, healths],
-  ] of Fighter.query) {
+  ] of Crate.query) {
     for (let i = 0; i < entities.length; i++) {
       const e = entities[i]
       const { angle, x, y } = has(e, Interpolate)
@@ -42,11 +42,11 @@ export const sysRender = ({ has, get, spawn }: World<WorldTickData>) => {
       context.translate(x, y)
       context.rotate(angle)
       if (has(e, Player)) {
-        context.fillStyle = "#ffd8be"
+        context.fillStyle = "#7D80DA"
         context.fillRect(-hw, -hh, width, height)
       }
       context.lineWidth = 0.1
-      context.strokeStyle = "#ffd8be"
+      context.strokeStyle = "#7D80DA"
       context.strokeRect(-hw, -hh, width, height)
       context.restore()
     }
@@ -64,7 +64,7 @@ export const sysRender = ({ has, get, spawn }: World<WorldTickData>) => {
       context.translate(x, y)
       context.rotate(angle)
       context.lineWidth = 0.1
-      context.strokeStyle = "#ffeedd"
+      context.strokeStyle = "#CEBACF"
       context.strokeRect(-hw, -hh, width, height)
       context.restore()
     }

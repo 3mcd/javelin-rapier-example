@@ -1,18 +1,16 @@
 import { component, createEffect, createQuery, Entity } from "@javelin/ecs"
 import {
-  attach,
-  createMessage,
   createMessageProducer,
+  decode,
   encode,
   MessageProducer,
-  model,
 } from "@javelin/net"
 import { Connection } from "@web-udp/client"
 import {
   assert,
   ConnectionMetadata,
   ConnectionType,
-  Fighter,
+  Crate,
   isConnectionMetadata,
   Player,
 } from "../../../common"
@@ -34,14 +32,15 @@ export const useClients = createEffect(world => {
   const clients = new Map<string, Client>()
   const qryPlayers = createQuery(Player).bind(world)
   const sendInitialMessage = (client: Client) => {
-    const message = createMessage()
-    model(message)
-    qryPlayers((e, components) => attach(message, e, components))
-    Fighter.query.bind(world)((e, components) => attach(message, e, components))
-    qryBoxesStatic.bind(world)((e, components) =>
-      attach(message, e, components),
-    )
-    client.connection.send(encode(message))
+    qryPlayers(client.producer.attach)
+    Crate.query.bind(world)(client.producer.attach)
+    qryBoxesStatic.bind(world)(client.producer.attach)
+    // decode(encode(client.producer.take(true)), {
+    //   onModel(model) {
+    //     console.log(model)
+    //   },
+    // })
+    client.connection.send(encode(client.producer.take(true)))
   }
   const findOrCreateClient = (
     connection: Connection,

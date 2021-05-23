@@ -21,7 +21,7 @@ export const sysRenderDebug = () => {
 
   context.save()
   context.font = "16px SF Mono"
-  context.fillStyle = "#9381ff"
+  context.fillStyle = "#137547"
   context.textAlign = "right"
   context.scale(1 / CANVAS_SCALE, -1 / CANVAS_SCALE)
   context.fillText(
