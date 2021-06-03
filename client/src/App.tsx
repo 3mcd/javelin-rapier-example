@@ -16,7 +16,7 @@ function App() {
     let running = true
     const step = (time: number) => {
       if (running) {
-        world.tick({ time, canvas: canvas.current })
+        world.step({ time, canvas: canvas.current })
         requestAnimationFrame(step)
       }
     }

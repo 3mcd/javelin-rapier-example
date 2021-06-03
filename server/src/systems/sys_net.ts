@@ -1,11 +1,17 @@
-import { Component, Entity, useInterval, useMonitor, World } from "@javelin/ecs"
+import {
+  clear,
+  Component,
+  Entity,
+  useInterval,
+  useMonitor,
+  World,
+} from "@javelin/ecs"
 import { Clock } from "@javelin/hrtime-loop"
 import { encode } from "@javelin/net"
-import { reset } from "@javelin/track"
 import { Crate, Player, Transform } from "../../../common"
 import { useClients } from "../effects"
 import { SEND_RATE } from "../env"
-import { qryBodiesWChanges, qryBoxesStatic, qryPlayers } from "../queries"
+import { qryBodies, qryBoxesStatic, qryPlayers } from "../queries"
 
 export const sysNet = ({ tryGet }: World<Clock>) => {
   const send = useInterval((1 / SEND_RATE) * 1000)
@@ -28,9 +34,10 @@ export const sysNet = ({ tryGet }: World<Clock>) => {
         if (client === undefined) {
           continue
         }
-        for (const [entities, [transforms, changes]] of qryBodiesWChanges) {
+        for (const [entities, [transforms]] of qryBodies) {
           for (let i = 0; i < entities.length; i++) {
-            const { x, y } = transforms[i]
+            const transform = transforms[i]
+            const { x, y } = transform
             let distance: number
             if (playerTransform) {
               distance = Math.hypot(
@@ -40,7 +47,7 @@ export const sysNet = ({ tryGet }: World<Clock>) => {
             } else {
               distance = Math.hypot(x, y)
             }
-            client.producerU.patch(entities[i], changes[i], 1 / distance)
+            client.producerU.patch(entities[i], transform, 1 / distance)
           }
         }
         const message = client.producer.take()
@@ -55,9 +62,9 @@ export const sysNet = ({ tryGet }: World<Clock>) => {
         }
       }
     }
-    for (const [entities, [, changes]] of qryBodiesWChanges) {
+    for (const [entities, [transforms]] of qryBodies) {
       for (let i = 0; i < entities.length; i++) {
-        reset(changes[i])
+        clear(transforms[i])
       }
     }
   }

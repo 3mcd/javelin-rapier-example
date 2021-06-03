@@ -1,10 +1,5 @@
 import { component, createEffect, createQuery, Entity } from "@javelin/ecs"
-import {
-  createMessageProducer,
-  decode,
-  encode,
-  MessageProducer,
-} from "@javelin/net"
+import { createMessageProducer, encode, MessageProducer } from "@javelin/net"
 import { Connection } from "@web-udp/client"
 import {
   assert,
@@ -28,18 +23,13 @@ export type Client = {
 }
 
 export const useClients = createEffect(world => {
-  const { spawn, destroy } = world
+  const { create, destroy } = world
   const clients = new Map<string, Client>()
   const qryPlayers = createQuery(Player).bind(world)
   const sendInitialMessage = (client: Client) => {
     qryPlayers(client.producer.attach)
     Crate.query.bind(world)(client.producer.attach)
     qryBoxesStatic.bind(world)(client.producer.attach)
-    // decode(encode(client.producer.take(true)), {
-    //   onModel(model) {
-    //     console.log(model)
-    //   },
-    // })
     client.connection.send(encode(client.producer.take(true)))
   }
   const findOrCreateClient = (
@@ -59,7 +49,7 @@ export const useClients = createEffect(world => {
         }
       }
       if (entity === undefined) {
-        entity = spawn(component(Player, { clientId }))
+        entity = create(component(Player, { clientId }))
       }
       client = {
         id: clientId,

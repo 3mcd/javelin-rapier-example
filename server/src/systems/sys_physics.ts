@@ -3,13 +3,13 @@ import { Clock } from "@javelin/hrtime-loop"
 import { Box, Transform } from "../../../common"
 import { usePhysicsWorld } from "../effects"
 
-export const sysPhysics = ({ spawn }: World<Clock>) => {
+export const sysPhysics = ({ create }: World<Clock>) => {
   const world = usePhysicsWorld()
   const init = useRef(true)
 
   if (init.value) {
     // Create the ground
-    spawn(
+    create(
       component(Transform, { x: 0, y: -10 }),
       component(Box, { width: 20, height: 1 }),
     )

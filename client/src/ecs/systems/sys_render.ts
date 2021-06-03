@@ -1,13 +1,12 @@
 import { component, createQuery, useRef, World } from "@javelin/ecs"
-import { Crate, Player } from "../../../../common"
+import { Box, Crate, Player, Transform, Velocity } from "../../../../common"
 import { CANVAS_SCALE, useScene } from "../effects"
 import { Camera, Interpolate } from "../schema"
-import { Transform, Velocity, Box } from "../../../../common"
 import { WorldTickData } from "../types"
 
 const qryStatic = createQuery(Transform, Box).not(Velocity)
 
-export const sysRender = ({ has, get, spawn }: World<WorldTickData>) => {
+export const sysRender = ({ has, get, create }: World<WorldTickData>) => {
   const init = useRef(false)
   const scene = useScene()
   const context = scene.canvas?.context
@@ -17,7 +16,7 @@ export const sysRender = ({ has, get, spawn }: World<WorldTickData>) => {
   }
 
   if (!init.value) {
-    spawn(component(Camera))
+    create(component(Camera))
     init.value = true
   }
 
@@ -26,10 +25,7 @@ export const sysRender = ({ has, get, spawn }: World<WorldTickData>) => {
 
   context.translate(hw, hh)
 
-  for (const [
-    entities,
-    [transforms, velocities, boxes, healths],
-  ] of Crate.query) {
+  for (const [entities, [transforms, , boxes]] of Crate.query) {
     for (let i = 0; i < entities.length; i++) {
       const e = entities[i]
       const { angle, x, y } = has(e, Interpolate)

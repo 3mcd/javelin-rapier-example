@@ -8,9 +8,7 @@ const world = createWorld<Clock>({
   systems: Object.values(Systems),
 })
 
-const loop = createHrtimeLoop((1 / Env.TICK_RATE) * 1000, clock =>
-  world.tick(clock),
-)
+const loop = createHrtimeLoop(world.step, (1 / Env.TICK_RATE) * 1000)
 
 loop.start()
 server.listen(Env.PORT)

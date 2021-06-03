@@ -1,8 +1,7 @@
-import { createEffect, useMonitor, World } from "@javelin/ecs"
-import { set } from "@javelin/track"
+import { createEffect, observe, useMonitor, World } from "@javelin/ecs"
 import { Velocity } from "../../../common"
 import * as Rapier from "../../lib/rapier"
-import { qryBodiesWChanges, qryBoxes, qryDynamic } from "../queries"
+import { qryBodies, qryBoxes, qryDynamic } from "../queries"
 
 const world = new Rapier.World(new Rapier.Vector2(0, -10))
 
@@ -39,16 +38,16 @@ export const usePhysicsWorld = createEffect(({ has }: World<unknown>) => {
         }
       },
     )
-    for (const [entities, [transforms, changesets]] of qryBodiesWChanges) {
+    for (const [entities, [transforms]] of qryBodies) {
       for (let i = 0; i < entities.length; i++) {
         const e = entities[i]
         const t = transforms[i]
-        const c = changesets[i]
+        const o = observe(t)
         const rigidBody = rigidBodies[e]
         const { x, y } = rigidBody.translation()
-        set(t, c, "angle", rigidBody.rotation())
-        set(t, c, "x", x)
-        set(t, c, "y", y)
+        o.angle = rigidBody.rotation()
+        o.x = x
+        o.y = y
       }
     }
     for (const [entities, [velocities]] of qryDynamic) {

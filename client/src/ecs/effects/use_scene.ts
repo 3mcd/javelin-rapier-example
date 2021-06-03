@@ -14,7 +14,7 @@ export const useScene = createEffect(
   (world: World<WorldTickData>) => {
     const state = { ready: false, canvas: null } as UseSceneState
     return function useScene() {
-      const canvas = world.state.currentTickData.canvas
+      const canvas = world.latestStepData.canvas
       if (canvas !== null && state.ready === false) {
         Object.assign(state, { canvas, ready: true })
         canvas.context?.scale(CANVAS_SCALE, -CANVAS_SCALE)

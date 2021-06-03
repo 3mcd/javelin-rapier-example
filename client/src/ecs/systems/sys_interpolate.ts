@@ -9,7 +9,7 @@ const qryTransforms = createQuery(Transform)
 const qryTransformsWInterpolate = createQuery(Transform, Interpolate)
 
 export const sysInterpolate = (world: World<WorldTickData>) => {
-  const { patched, updated } = useConnect()
+  const { updated } = useConnect()
   const bufferTime = performance.now() - 1000
 
   useMonitor(
@@ -32,7 +32,7 @@ export const sysInterpolate = (world: World<WorldTickData>) => {
       const ip = interpolates[i]
       const { buffer } = ip
 
-      if (patched.has(e) || updated.has(e)) {
+      if (updated.has(e)) {
         interpBufferInsert(x, y, angle, ip)
         const now = performance.now()
         ip.adaptiveSendRate = (now - bufferTime) / 1000
