@@ -8,7 +8,7 @@ import {
 } from "@javelin/ecs"
 import { Clock } from "@javelin/hrtime-loop"
 import { encode } from "@javelin/net"
-import { Crate, Player, Transform } from "../../../common"
+import { Crate, Transform } from "../../../common"
 import { useClients } from "../effects"
 import { SEND_RATE } from "../env"
 import { qryBodies, qryBoxesStatic, qryPlayers } from "../queries"

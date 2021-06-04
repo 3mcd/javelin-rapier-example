@@ -8,15 +8,15 @@
     "start": "concurrently -k \"npm:start:client\" \"npm:watch:server\"",
     "start:client": "vite --config client/vite.config.ts",
     "start:server": "npm run build:server && node -r esm server/dist/server/src/index.js",
-    "watch:server": "nodemon -e js,ts --watch server/src --watch common --exec npm run start:server",
+    "watch:server": "nodemon -e js,ts --watch server/src --watch common --exec npm run debug:server",
     "debug": "concurrently -k \"npm:start:client\" \"npm:watch:server\"",
     "debug:server": "npm run build:server && ndb node -r esm server/dist/server/src/index.js"
   },
   "dependencies": {
     "@dimforge/rapier2d": "^0.5.3",
-    "@javelin/ecs": "^1.0.0-alpha.5",
+    "@javelin/ecs": "^1.0.0-alpha.6",
     "@javelin/hrtime-loop": "^1.0.0-alpha.2",
-    "@javelin/net": "^1.0.0-alpha.5",
+    "@javelin/net": "^1.0.0-alpha.6",
     "@javelin/pack": "^1.0.0-alpha.5",
     "@types/node": "^15.3.0",
     "@types/react": "^17.0.5",
